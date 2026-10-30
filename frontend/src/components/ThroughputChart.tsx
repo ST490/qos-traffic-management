@@ -6,7 +6,6 @@ import { CLASS_CONFIG } from '../types';
 interface ThroughputChartProps {
   history: MetricsHistory[];
   policyChanges?: { elapsed: number; label: string }[];
-  width?: number;
   height?: number;
 }
 
@@ -27,9 +26,9 @@ export default function ThroughputChart({
 
     const width = container.clientWidth;
     const height = propHeight;
-    const margin = { top: 16, right: 16, bottom: 32, left: 48 };
-    const innerW = width - margin.left - margin.right;
-    const innerH = height - margin.top - margin.bottom;
+    const margin = { top: 16, right: 16, bottom: 28, left: 36 };
+    const innerW = Math.max(10, width - margin.left - margin.right);
+    const innerH = Math.max(10, height - margin.top - margin.bottom);
 
     const sel = d3.select(svg);
     sel.attr('width', width).attr('height', height);
@@ -46,8 +45,8 @@ export default function ThroughputChart({
         .attr('text-anchor', 'middle')
         .attr('fill', '#8A8880')
         .attr('font-family', 'Inter Tight')
-        .attr('font-size', 13)
-        .text('Waiting for data…');
+        .attr('font-size', 12)
+        .text('Awaiting stream telemetry…');
       return;
     }
 
@@ -63,39 +62,40 @@ export default function ThroughputChart({
         d.bulk.throughput_mbps
       )
     ) ?? 10;
-    const y = d3.scaleLinear().domain([0, maxThroughput * 1.1]).range([innerH, 0]).nice();
+    const y = d3.scaleLinear().domain([0, Math.max(maxThroughput * 1.15, 4)]).range([innerH, 0]).nice();
 
-    // Grid
+    // Horizontal grid lines only
     g.append('g')
       .attr('class', 'grid')
       .call(
-        d3.axisLeft(y).tickSize(-innerW).tickFormat(() => '')
+        d3.axisLeft(y).ticks(4).tickSize(-innerW).tickFormat(() => '')
       )
       .selectAll('line')
-      .attr('stroke', '#1a1a1a')
-      .attr('stroke-dasharray', '2,3');
+      .attr('stroke', '#1a1a20')
+      .attr('stroke-dasharray', '3,4');
     g.selectAll('.grid .domain').remove();
 
-    // Axes
+    // X Axis
     g.append('g')
       .attr('transform', `translate(0,${innerH})`)
-      .call(d3.axisBottom(x).ticks(6).tickFormat((d) => `${d}s`))
+      .call(d3.axisBottom(x).ticks(5).tickFormat((d) => `${d}s`))
       .selectAll('text')
-      .attr('fill', '#8A8880')
-      .attr('font-family', 'Inter Tight')
-      .attr('font-size', 10);
-
-    g.append('g')
-      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => `${d}`))
-      .selectAll('text')
-      .attr('fill', '#8A8880')
+      .attr('fill', '#6E6D66')
       .attr('font-family', 'JetBrains Mono')
       .attr('font-size', 10);
 
-    g.selectAll('.domain').attr('stroke', '#2A2A2D');
-    g.selectAll('.tick line').attr('stroke', '#2A2A2D');
+    // Y Axis
+    g.append('g')
+      .call(d3.axisLeft(y).ticks(4).tickFormat((d) => `${d}`))
+      .selectAll('text')
+      .attr('fill', '#6E6D66')
+      .attr('font-family', 'JetBrains Mono')
+      .attr('font-size', 10);
 
-    // Lines
+    g.selectAll('.domain').attr('stroke', '#1e1e24');
+    g.selectAll('.tick line').attr('stroke', '#1e1e24');
+
+    // Lines per traffic class
     for (const cls of classes) {
       const color = CLASS_CONFIG[cls].color;
       const line = d3
@@ -108,11 +108,13 @@ export default function ThroughputChart({
         .datum(history)
         .attr('fill', 'none')
         .attr('stroke', color)
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 2.2)
+        .attr('stroke-linecap', 'round')
+        .attr('stroke-linejoin', 'round')
         .attr('d', line);
     }
 
-    // Policy change lines
+    // Policy change vertical event lines
     for (const pc of policyChanges) {
       if (pc.elapsed >= xExtent[0] && pc.elapsed <= xExtent[1]) {
         const px = x(pc.elapsed);
@@ -120,33 +122,34 @@ export default function ThroughputChart({
           .attr('x1', px).attr('x2', px)
           .attr('y1', 0).attr('y2', innerH)
           .attr('stroke', '#8A8880')
-          .attr('stroke-dasharray', '4,3')
-          .attr('stroke-width', 1);
+          .attr('stroke-dasharray', '4,4')
+          .attr('stroke-width', 1.2);
 
         g.append('text')
           .attr('x', px + 4)
-          .attr('y', 12)
-          .attr('fill', '#8A8880')
+          .attr('y', 10)
+          .attr('fill', '#9B9990')
           .attr('font-size', 9)
-          .attr('font-family', 'Inter Tight')
+          .attr('font-family', 'JetBrains Mono')
           .text(pc.label);
       }
     }
 
-    // Tooltip
+    // Interactive Hover Tooltip
     const tooltip = sel.append('g').attr('display', 'none');
     const tooltipLine = tooltip
       .append('line')
       .attr('y1', margin.top)
       .attr('y2', height - margin.bottom)
       .attr('stroke', '#F2F0EA')
-      .attr('stroke-width', 0.5);
+      .attr('stroke-dasharray', '2,2')
+      .attr('stroke-width', 0.8);
 
     const tooltipBg = tooltip
       .append('rect')
-      .attr('fill', 'rgba(20,20,21,0.9)')
-      .attr('rx', 6)
-      .attr('stroke', '#2A2A2D');
+      .attr('fill', 'rgba(17,17,20,0.95)')
+      .attr('rx', 8)
+      .attr('stroke', '#282830');
 
     const tooltipText = tooltip.append('text')
       .attr('fill', '#F2F0EA')
@@ -169,14 +172,15 @@ export default function ThroughputChart({
       tooltipLine.attr('x1', mx).attr('x2', mx);
 
       const lines = classes.map(
-        (cls) => `${cls}: ${closest[cls].throughput_mbps.toFixed(2)} Mbps`
+        (cls) => `${cls.toUpperCase()}: ${closest[cls].throughput_mbps.toFixed(2)} Mbps`
       );
       tooltipText.selectAll('tspan').remove();
       lines.forEach((line, i) => {
         tooltipText
           .append('tspan')
-          .attr('x', mx + 12)
-          .attr('y', margin.top + 20 + i * 14)
+          .attr('x', mx + 14)
+          .attr('y', margin.top + 20 + i * 15)
+          .attr('fill', CLASS_CONFIG[classes[i]].color)
           .text(line);
       });
 
@@ -184,7 +188,7 @@ export default function ThroughputChart({
         .attr('x', mx + 6)
         .attr('y', margin.top + 4)
         .attr('width', 160)
-        .attr('height', lines.length * 14 + 12);
+        .attr('height', lines.length * 15 + 14);
     });
 
     sel.on('mouseleave', () => tooltip.attr('display', 'none'));
@@ -197,17 +201,27 @@ export default function ThroughputChart({
     return () => window.removeEventListener('resize', handleResize);
   }, [draw]);
 
+  const latestChange = policyChanges.length > 0 ? policyChanges[policyChanges.length - 1] : null;
+
   return (
-    <div className="glass-card p-5">
-      <h3 className="label-sm mb-4">Throughput per class · last 60 s</h3>
-      <div ref={containerRef} className="w-full">
-        <svg ref={svgRef} className="w-full" />
+    <div
+      className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+      data-crosshair-target
+    >
+      <div>
+        <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs mb-4">
+          THROUGHPUT PER CLASS · LAST 60 S
+        </h3>
+        <div ref={containerRef} className="w-full">
+          <svg ref={svgRef} className="w-full" />
+        </div>
       </div>
-      {policyChanges.length > 0 && (
-        <p className="mt-3 text-xs text-[var(--text-dim)] font-ui">
-          Dashed line: {policyChanges[policyChanges.length - 1]?.label}
-        </p>
-      )}
+
+      <p className="mt-4 text-xs font-mono text-[#8A8880] tracking-tight">
+        {latestChange
+          ? `Dashed line: policy escalated to ${latestChange.label} at t = ${latestChange.elapsed} s`
+          : 'Dashed line: policy changes annotated in real time'}
+      </p>
     </div>
   );
 }

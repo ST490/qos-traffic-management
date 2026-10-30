@@ -21,9 +21,9 @@ export default function LatencyChart({ history, height: propHeight = 220 }: Late
 
     const width = container.clientWidth;
     const height = propHeight;
-    const margin = { top: 16, right: 16, bottom: 32, left: 48 };
-    const innerW = width - margin.left - margin.right;
-    const innerH = height - margin.top - margin.bottom;
+    const margin = { top: 16, right: 16, bottom: 28, left: 36 };
+    const innerW = Math.max(10, width - margin.left - margin.right);
+    const innerH = Math.max(10, height - margin.top - margin.bottom);
 
     const sel = d3.select(svg);
     sel.attr('width', width).attr('height', height);
@@ -35,9 +35,9 @@ export default function LatencyChart({ history, height: propHeight = 220 }: Late
       g.append('text')
         .attr('x', innerW / 2).attr('y', innerH / 2)
         .attr('text-anchor', 'middle')
-        .attr('fill', '#8A8880').attr('font-size', 13)
+        .attr('fill', '#8A8880').attr('font-size', 12)
         .attr('font-family', 'Inter Tight')
-        .text('Waiting for data…');
+        .text('Awaiting stream telemetry…');
       return;
     }
 
@@ -47,28 +47,29 @@ export default function LatencyChart({ history, height: propHeight = 220 }: Late
     const maxLatency = d3.max(history, d =>
       Math.max(...classes.map(c => d[c].latency_p99_ms))
     ) ?? 100;
-    const y = d3.scaleLinear().domain([0, maxLatency * 1.15]).range([innerH, 0]).nice();
+    const y = d3.scaleLinear().domain([0, Math.max(maxLatency * 1.15, 30)]).range([innerH, 0]).nice();
 
-    // Grid
-    g.append('g').call(d3.axisLeft(y).tickSize(-innerW).tickFormat(() => ''))
-      .selectAll('line').attr('stroke', '#1a1a1a').attr('stroke-dasharray', '2,3');
+    // Grid lines
+    g.append('g').call(d3.axisLeft(y).ticks(4).tickSize(-innerW).tickFormat(() => ''))
+      .selectAll('line').attr('stroke', '#1a1a20').attr('stroke-dasharray', '3,4');
     g.selectAll('.domain').remove();
 
-    // Axes
+    // X axis
     g.append('g').attr('transform', `translate(0,${innerH})`)
-      .call(d3.axisBottom(x).ticks(6).tickFormat(d => `${d}s`))
-      .selectAll('text').attr('fill', '#8A8880').attr('font-size', 10);
+      .call(d3.axisBottom(x).ticks(5).tickFormat(d => `${d}s`))
+      .selectAll('text').attr('fill', '#6E6D66').attr('font-family', 'JetBrains Mono').attr('font-size', 10);
 
-    g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d => `${d}`))
-      .selectAll('text').attr('fill', '#8A8880').attr('font-family', 'JetBrains Mono').attr('font-size', 10);
+    // Y axis
+    g.append('g').call(d3.axisLeft(y).ticks(4).tickFormat(d => `${d}ms`))
+      .selectAll('text').attr('fill', '#6E6D66').attr('font-family', 'JetBrains Mono').attr('font-size', 10);
 
-    g.selectAll('.tick line').attr('stroke', '#2A2A2D');
+    g.selectAll('.domain').attr('stroke', '#1e1e24');
+    g.selectAll('.tick line').attr('stroke', '#1e1e24');
 
     // Area for p95-p99 range, then line for avg
     for (const cls of classes) {
       const color = CLASS_CONFIG[cls].color;
 
-      // p95-p99 area
       const area = d3.area<MetricsHistory>()
         .x(d => x(d.elapsed))
         .y0(d => y(d[cls].latency_p95_ms))
@@ -78,10 +79,9 @@ export default function LatencyChart({ history, height: propHeight = 220 }: Late
       g.append('path')
         .datum(history)
         .attr('fill', color)
-        .attr('fill-opacity', 0.08)
+        .attr('fill-opacity', 0.1)
         .attr('d', area);
 
-      // avg line
       const line = d3.line<MetricsHistory>()
         .x(d => x(d.elapsed))
         .y(d => y(d[cls].latency_avg_ms))
@@ -91,7 +91,8 @@ export default function LatencyChart({ history, height: propHeight = 220 }: Late
         .datum(history)
         .attr('fill', 'none')
         .attr('stroke', color)
-        .attr('stroke-width', 1.5)
+        .attr('stroke-width', 2)
+        .attr('stroke-linecap', 'round')
         .attr('d', line);
     }
   }, [history, propHeight]);
@@ -104,11 +105,24 @@ export default function LatencyChart({ history, height: propHeight = 220 }: Late
   }, [draw]);
 
   return (
-    <div className="glass-card p-5">
-      <h3 className="label-sm mb-4">Latency · avg with p95–p99 band</h3>
-      <div ref={containerRef} className="w-full">
-        <svg ref={svgRef} className="w-full" />
+    <div
+      className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+      data-crosshair-target
+    >
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs">
+            ONE-WAY DELAY & BUFFERBLOAT (MS)
+          </h3>
+          <span className="text-[0.6875rem] font-mono text-[#8A8880]">Avg with p95–p99 Band</span>
+        </div>
+        <div ref={containerRef} className="w-full">
+          <svg ref={svgRef} className="w-full" />
+        </div>
       </div>
+      <p className="mt-4 text-xs font-mono text-[#8A8880]">
+        Priority flows maintain ~20ms wire delay during severe link congestion.
+      </p>
     </div>
   );
 }

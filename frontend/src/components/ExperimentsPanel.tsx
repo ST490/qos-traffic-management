@@ -1,33 +1,37 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import MagneticButton from './MagneticButton';
 import type { RunInfo } from '../types';
 
 const SCENARIOS = [
   {
     id: 'baseline',
-    name: 'Baseline',
-    description: 'All traffic at default rates with FIFO. 60 s.',
+    name: 'Baseline FIFO',
+    badge: 'Baseline',
+    description: 'All traffic classes at default rates with FIFO discipline. Demonstrates severe bufferbloat.',
   },
   {
     id: 'congestion_ramp',
     name: 'Congestion Ramp',
-    description: 'Bulk ramps 0→15 Mbps over 30 s, then holds.',
+    badge: 'Stress',
+    description: 'Bulk floods link from 0→15 Mbps over 30s. Tests queue collapse thresholds.',
   },
   {
     id: 'mid_run_switch',
-    name: 'Mid-Run Switch',
-    description: 'FIFO for 30 s → Strict Priority. Shows QoS improvement.',
+    name: 'Mid-Run Policy Switch',
+    badge: 'Comparison',
+    description: 'FIFO for 30s → Strict Priority. Instant visual comparison of delay and loss drop.',
   },
   {
     id: 'fairness_stress',
     name: 'Fairness Stress',
-    description: 'All classes demand equal bandwidth. Compare Jain\'s index.',
+    badge: 'WFQ',
+    description: 'Equal 3 Mbps demand across all classes. Compares Jain’s index across queue weights.',
   },
   {
     id: 'adaptive_demo',
-    name: 'Adaptive Demo',
-    description: 'FIFO → ramp → Adaptive auto-engage at t=20 s.',
+    name: 'Autonomous Adaptive',
+    badge: 'Reactive',
+    description: 'Autonomous policy escalation: throttles bulk when load >85% or priority loss >2%.',
   },
 ];
 
@@ -50,83 +54,130 @@ export default function ExperimentsPanel({
 
   return (
     <section className="space-y-6" aria-label="Experiments">
-      {/* Scenarios */}
-      <div className="glass-card p-6">
-        <h3 className="label-sm mb-4">Scenarios</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Scenario launcher */}
+      <div
+        className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+        data-crosshair-target
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs">
+            AUTOMATED EXPERIMENT SUITE
+          </h3>
+          <span className="text-xs font-mono text-[#8A8880]">5 Preconfigured Benchmarks</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SCENARIOS.map((s) => (
             <div
               key={s.id}
-              className="border border-[var(--border)] rounded-lg p-4 hover:border-[var(--text-dim)] transition-colors"
+              className="border border-[#1f1f26] rounded-xl p-5 bg-[#14141a]/80 hover:bg-[#161620] hover:border-[#2a2a36] transition-all flex flex-col justify-between"
+              data-crosshair-target
             >
-              <h4 className="text-sm font-medium text-[var(--text)] mb-1 font-ui">{s.name}</h4>
-              <p className="text-xs text-[var(--text-dim)] mb-3 font-ui">{s.description}</p>
-              <MagneticButton
-                variant="secondary"
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h4 className="text-sm font-semibold text-[#F2F0EA] font-ui">{s.name}</h4>
+                  <span className="text-[0.625rem] font-mono uppercase px-2 py-0.5 rounded-full border border-[#2b2b36] text-[#8A8880]">
+                    {s.badge}
+                  </span>
+                </div>
+                <p className="text-xs text-[#8A8880] font-ui leading-relaxed mb-5">{s.description}</p>
+              </div>
+
+              <button
                 onClick={() => onRunScenario(s.id)}
                 disabled={running}
-                aria-label={`Run ${s.name}`}
+                data-crosshair-target
+                className={`w-full py-2 px-4 rounded-lg text-xs font-mono font-medium transition-all duration-200 cursor-pointer ${
+                  running
+                    ? 'opacity-40 bg-[#1c1c24] text-[#8A8880] cursor-not-allowed'
+                    : 'bg-[#1e1e28] hover:bg-[#C6FF3D] text-[#F2F0EA] hover:text-[#0B0B0C] border border-[#2a2a38] hover:border-[#C6FF3D]'
+                }`}
               >
-                {running ? 'Running…' : 'Run'}
-              </MagneticButton>
+                {running ? 'Benchmark in progress…' : `Run ${s.name} →`}
+              </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Run History */}
-      <div className="glass-card p-6">
-        <h3 className="label-sm mb-4">Run History</h3>
+      {/* Run Telemetry History */}
+      <div
+        className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+        data-crosshair-target
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs">
+            RUN REPOSITORY & DATA EXPORTS
+          </h3>
+          <span className="text-xs font-mono text-[#8A8880]">Persisted to SQLite</span>
+        </div>
+
         {runs.length === 0 ? (
-          <p className="text-sm text-[var(--text-dim)] font-ui">No runs yet. Start a scenario above.</p>
+          <div className="py-8 text-center border border-dashed border-[#222228] rounded-xl">
+            <p className="text-sm text-[#8A8880] font-ui">
+              No historical runs found yet. Launch a scenario above to record telemetry.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
             {runs.map((run) => (
               <motion.div
                 key={run.run_id}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
                   selected === run.run_id
-                    ? 'border-[var(--voip)] bg-[var(--voip)]/5'
-                    : 'border-[var(--border)] hover:border-[var(--text-dim)]'
+                    ? 'border-[#C6FF3D] bg-[#C6FF3D]/5'
+                    : 'border-[#1f1f26] bg-[#14141a]/60 hover:border-[#2a2a38]'
                 }`}
                 onClick={() => {
                   setSelected(run.run_id);
                   onLoadRun(run.run_id);
                 }}
-                whileHover={{ scale: 1.005 }}
+                whileHover={{ scale: 1.002 }}
+                data-crosshair-target
               >
                 <div>
-                  <span className="text-sm font-mono text-[var(--text)]">
-                    {run.run_id.slice(0, 19)}
+                  <span className="text-xs font-mono font-medium text-[#F2F0EA]">
+                    {run.run_id}
                   </span>
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-[0.65rem] text-[var(--text-dim)] font-ui">
-                      {run.scenario || 'manual'}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[0.6875rem] text-[#8A8880] font-mono">
+                      {run.scenario || 'live'}
                     </span>
-                    <span className="text-[0.65rem] text-[var(--text-dim)]">·</span>
-                    <span className="text-[0.65rem] text-[var(--text-dim)] font-ui">
-                      {run.initial_policy}
+                    <span className="text-[#3A3A40]">·</span>
+                    <span className="text-[0.6875rem] text-[#8A8880] font-mono">
+                      {run.initial_policy.toUpperCase()}
                     </span>
-                    <span className="text-[0.65rem] text-[var(--text-dim)]">·</span>
-                    <span className={`text-[0.65rem] font-ui ${
-                      run.status === 'completed' ? 'text-[var(--voip)]' : 'text-[var(--video)]'
-                    }`}>
+                    <span className="text-[#3A3A40]">·</span>
+                    <span
+                      className={`text-[0.6875rem] font-mono ${
+                        run.status === 'completed' ? 'text-[#C6FF3D]' : 'text-[#FF7A45]'
+                      }`}
+                    >
                       {run.status}
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex items-center gap-2">
                   <button
-                    className="text-xs text-[var(--text-dim)] hover:text-[var(--text)] font-ui"
-                    onClick={(e) => { e.stopPropagation(); onExport(run.run_id, 'csv'); }}
+                    className="text-xs font-mono px-2.5 py-1 rounded bg-[#1c1c24] border border-[#2a2a36] text-[#8A8880] hover:text-[#F2F0EA] hover:border-[#404050] transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onExport(run.run_id, 'csv');
+                    }}
                     aria-label="Export CSV"
+                    data-crosshair-target
                   >
                     CSV
                   </button>
                   <button
-                    className="text-xs text-[var(--text-dim)] hover:text-[var(--text)] font-ui"
-                    onClick={(e) => { e.stopPropagation(); onExport(run.run_id, 'json'); }}
+                    className="text-xs font-mono px-2.5 py-1 rounded bg-[#1c1c24] border border-[#2a2a36] text-[#8A8880] hover:text-[#F2F0EA] hover:border-[#404050] transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onExport(run.run_id, 'json');
+                    }}
                     aria-label="Export JSON"
+                    data-crosshair-target
                   >
                     JSON
                   </button>
