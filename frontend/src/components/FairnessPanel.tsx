@@ -13,66 +13,65 @@ export default function FairnessPanel({
   utilization,
   adaptiveMessage,
 }: FairnessPanelProps) {
-  const utilizationColor =
-    utilization < 0.7 ? '#C6FF3D' : utilization < 0.85 ? '#FFD700' : '#FF4444';
-
   const defaultExplanation =
     adaptiveMessage ||
     (utilization > 0.85
       ? 'Utilisation crossed 85%, so Bulk was metered down and VoIP was promoted. Release when load stays under 70% for 10 s.'
-      : 'Bottleneck capacity is distributed according to active queue disciplines with fair share guarantee.');
+      : 'Bottleneck capacity is dynamically allocated across queues to guarantee strict voice SLA while preserving fair bandwidth sharing.');
 
   return (
     <div
-      className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+      className="card-surface p-5 sm:p-6 flex flex-col justify-between h-full min-w-0 w-full"
       data-crosshair-target
     >
       <div>
-        {/* Jain's Index Header */}
-        <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs mb-3">
+        {/* Title: 12px uppercase tracking 0.08em */}
+        <h3 className="card-title text-xs font-semibold tracking-wider text-white/55 mb-4">
           JAIN'S FAIRNESS INDEX
         </h3>
 
-        {/* Big Serif Number */}
-        <div className="flex items-baseline gap-4 my-2">
-          <div className="font-display text-6xl md:text-7xl font-normal text-[#F2F0EA] tracking-tight leading-none">
+        {/* Big metric number + caption */}
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-6">
+          <div className="font-display text-[48px] sm:text-[56px] leading-none font-normal text-[#F3F4F6] tabular-nums">
             {jainIndex > 0 ? jainIndex.toFixed(2) : '1.00'}
           </div>
-          <div className="text-xs font-mono text-[#8A8880]">
-            Demand-norm: {(jainDemandNormalized > 0 ? jainDemandNormalized : 1).toFixed(2)}
+          <div className="text-[13px] font-mono text-white/50">
+            Demand-normalised: {(jainDemandNormalized > 0 ? jainDemandNormalized : 1).toFixed(2)}
           </div>
         </div>
 
-        {/* Bottleneck Utilisation Header */}
-        <div className="mt-8 mb-2 flex items-center justify-between">
-          <h4 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs">
-            BOTTLENECK UTILISATION
-          </h4>
-          <span className="font-mono text-xs text-[#F2F0EA] font-medium">
-            {(utilization * 100).toFixed(0)}%
-          </span>
-        </div>
+        {/* Stacked sub-section: Bottleneck Utilisation */}
+        <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+          <div className="flex items-center justify-between">
+            <h4 className="card-title text-xs font-semibold tracking-wider text-white/55">
+              BOTTLENECK UTILISATION
+            </h4>
+            <span className="font-mono text-[13px] text-white/90 font-medium tabular-nums">
+              {(utilization * 100).toFixed(0)}%
+            </span>
+          </div>
 
-        {/* Utilisation Bar */}
-        <div className="h-2.5 w-full rounded-full bg-[#1c1c22] overflow-hidden my-3">
-          <motion.div
-            className="h-full rounded-full"
-            style={{ backgroundColor: utilizationColor }}
-            animate={{ width: `${Math.min(100, Math.max(2, utilization * 100))}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-          />
+          {/* Bar height 10px, fully rounded, amber gradient */}
+          <div className="h-[10px] w-full rounded-full bg-white/[0.06] overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-[#F59E0B] to-[#FBBF24]"
+              animate={{ width: `${Math.min(100, Math.max(2, utilization * 100))}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
+
+          {/* Description sitting naturally right under the bar instead of floating */}
+          <p className="text-[14px] leading-relaxed text-white/60 font-ui pt-2">
+            {defaultExplanation}
+          </p>
         </div>
       </div>
 
-      {/* Adaptive explanation */}
-      <motion.p
-        className="mt-6 text-xs md:text-sm text-[#8A8880] font-ui leading-relaxed"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {defaultExplanation}
-      </motion.p>
+      {/* Card footer row pinned with subtle top divider */}
+      <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-white/40">
+        <span>Target Threshold: 85.0%</span>
+        <span>Hysteresis: 10s @ &lt;70%</span>
+      </div>
     </div>
   );
 }

@@ -53,44 +53,44 @@ export default function ExperimentsPanel({
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
-    <section className="space-y-6" aria-label="Experiments">
+    <section className="space-y-6 w-full min-w-0" aria-label="Experiments">
       {/* Scenario launcher */}
       <div
-        className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+        className="card-surface p-5 sm:p-6 min-w-0 w-full"
         data-crosshair-target
       >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="card-title text-xs font-semibold tracking-wider text-white/55">
             AUTOMATED EXPERIMENT SUITE
           </h3>
-          <span className="text-xs font-mono text-[#8A8880]">5 Preconfigured Benchmarks</span>
+          <span className="text-xs font-mono text-white/40">5 Preconfigured Benchmarks</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SCENARIOS.map((s) => (
             <div
               key={s.id}
-              className="border border-[#1f1f26] rounded-xl p-5 bg-[#14141a]/80 hover:bg-[#161620] hover:border-[#2a2a36] transition-all flex flex-col justify-between"
+              className="border border-white/[0.06] rounded-xl p-5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/15 transition-all duration-150 flex flex-col justify-between"
               data-crosshair-target
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <h4 className="text-sm font-semibold text-[#F2F0EA] font-ui">{s.name}</h4>
-                  <span className="text-[0.625rem] font-mono uppercase px-2 py-0.5 rounded-full border border-[#2b2b36] text-[#8A8880]">
+                  <h4 className="text-sm font-semibold text-white/90 font-ui">{s.name}</h4>
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border border-white/10 text-white/60">
                     {s.badge}
                   </span>
                 </div>
-                <p className="text-xs text-[#8A8880] font-ui leading-relaxed mb-5">{s.description}</p>
+                <p className="text-xs text-white/60 font-ui leading-relaxed mb-5">{s.description}</p>
               </div>
 
               <button
                 onClick={() => onRunScenario(s.id)}
                 disabled={running}
                 data-crosshair-target
-                className={`w-full py-2 px-4 rounded-lg text-xs font-mono font-medium transition-all duration-200 cursor-pointer ${
+                className={`w-full py-2 px-3 rounded-lg text-xs font-mono font-medium transition-all duration-150 cursor-pointer ${
                   running
-                    ? 'opacity-40 bg-[#1c1c24] text-[#8A8880] cursor-not-allowed'
-                    : 'bg-[#1e1e28] hover:bg-[#C6FF3D] text-[#F2F0EA] hover:text-[#0B0B0C] border border-[#2a2a38] hover:border-[#C6FF3D]'
+                    ? 'opacity-40 bg-white/5 text-white/40 cursor-not-allowed'
+                    : 'bg-white/5 hover:bg-[#C6FF3D] text-white/90 hover:text-[#0A0B0E] border border-white/10 hover:border-[#C6FF3D]'
                 }`}
               >
                 {running ? 'Benchmark in progress…' : `Run ${s.name} →`}
@@ -102,54 +102,54 @@ export default function ExperimentsPanel({
 
       {/* Run Telemetry History */}
       <div
-        className="rounded-2xl border border-[#1f1f24] hover:border-[#2a2a32] bg-[#111114] p-7 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+        className="card-surface p-5 sm:p-6 min-w-0 w-full"
         data-crosshair-target
       >
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="label-sm text-[#8A8880] tracking-widest font-semibold text-xs">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="card-title text-xs font-semibold tracking-wider text-white/55">
             RUN REPOSITORY & DATA EXPORTS
           </h3>
-          <span className="text-xs font-mono text-[#8A8880]">Persisted to SQLite</span>
+          <span className="text-xs font-mono text-white/40">SQLite Telemetry Storage</span>
         </div>
 
         {runs.length === 0 ? (
-          <div className="py-8 text-center border border-dashed border-[#222228] rounded-xl">
-            <p className="text-sm text-[#8A8880] font-ui">
+          <div className="py-8 text-center border border-dashed border-white/10 rounded-xl">
+            <p className="text-sm text-white/50 font-ui">
               No historical runs found yet. Launch a scenario above to record telemetry.
             </p>
           </div>
         ) : (
-          <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {runs.map((run) => (
               <motion.div
                 key={run.run_id}
-                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
+                className={`flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
                   selected === run.run_id
                     ? 'border-[#C6FF3D] bg-[#C6FF3D]/5'
-                    : 'border-[#1f1f26] bg-[#14141a]/60 hover:border-[#2a2a38]'
+                    : 'border-white/[0.06] bg-white/[0.02] hover:border-white/15'
                 }`}
                 onClick={() => {
                   setSelected(run.run_id);
                   onLoadRun(run.run_id);
                 }}
-                whileHover={{ scale: 1.002 }}
+                whileHover={{ scale: 1.001 }}
                 data-crosshair-target
               >
                 <div>
-                  <span className="text-xs font-mono font-medium text-[#F2F0EA]">
+                  <span className="text-xs font-mono font-medium text-white/90">
                     {run.run_id}
                   </span>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[0.6875rem] text-[#8A8880] font-mono">
+                    <span className="text-[11px] text-white/50 font-mono">
                       {run.scenario || 'live'}
                     </span>
-                    <span className="text-[#3A3A40]">·</span>
-                    <span className="text-[0.6875rem] text-[#8A8880] font-mono">
+                    <span className="text-white/20">·</span>
+                    <span className="text-[11px] text-white/50 font-mono">
                       {run.initial_policy.toUpperCase()}
                     </span>
-                    <span className="text-[#3A3A40]">·</span>
+                    <span className="text-white/20">·</span>
                     <span
-                      className={`text-[0.6875rem] font-mono ${
+                      className={`text-[11px] font-mono ${
                         run.status === 'completed' ? 'text-[#C6FF3D]' : 'text-[#FF7A45]'
                       }`}
                     >
@@ -160,7 +160,7 @@ export default function ExperimentsPanel({
 
                 <div className="flex items-center gap-2">
                   <button
-                    className="text-xs font-mono px-2.5 py-1 rounded bg-[#1c1c24] border border-[#2a2a36] text-[#8A8880] hover:text-[#F2F0EA] hover:border-[#404050] transition-colors"
+                    className="text-xs font-mono px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-white/70 hover:text-white hover:border-white/25 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onExport(run.run_id, 'csv');
@@ -171,7 +171,7 @@ export default function ExperimentsPanel({
                     CSV
                   </button>
                   <button
-                    className="text-xs font-mono px-2.5 py-1 rounded bg-[#1c1c24] border border-[#2a2a36] text-[#8A8880] hover:text-[#F2F0EA] hover:border-[#404050] transition-colors"
+                    className="text-xs font-mono px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-white/70 hover:text-white hover:border-white/25 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onExport(run.run_id, 'json');

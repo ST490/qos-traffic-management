@@ -1,24 +1,32 @@
 @import "tailwindcss";
 
-/* ── Theme Tokens ── */
+/* ── Refined Design Tokens ── */
 :root {
-  --ground: #0B0B0C;
-  --text: #F2F0EA;
-  --text-dim: #8A8880;
-  --surface: #141415;
-  --surface-hover: #1C1C1E;
-  --border: #2A2A2D;
+  --ground: #0A0B0E;
+  --surface: #111318;
+  --surface-hover: #161820;
+  --surface-active: #1C1F2A;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.14);
+  --text: #F3F4F6;
+  --text-muted: #8E929E;
+  --text-dim: #5C606C;
   --voip: #C6FF3D;
   --video: #FF7A45;
   --web: #6AA8FF;
   --bulk: #B79CFF;
+  --amber: #F59E0B;
   --font-display: 'Instrument Serif', serif;
-  --font-ui: 'Inter Tight', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-ui: 'Inter Tight', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
-/* ── Base ── */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ── Base Reset & Strict Box Sizing ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 html {
   background: var(--ground);
@@ -27,40 +35,36 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--ground);
   min-height: 100vh;
+  max-width: 100vw;
   overflow-x: hidden;
+  position: relative;
 }
 
-/* ── Film Grain ── */
+/* ── Film Grain Subtle Texture ── */
 .film-grain::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 9998;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 128px 128px;
-  animation: grain 0.5s steps(4) infinite;
-}
-
-@keyframes grain {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-5%, -5%); }
-  50% { transform: translate(5%, 5%); }
-  75% { transform: translate(-2%, 3%); }
 }
 
 /* ── Custom Cursor ── */
 .cursor-dot {
   position: fixed;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: var(--text);
   border-radius: 50%;
   pointer-events: none;
@@ -71,34 +75,99 @@ body {
 
 .cursor-ring {
   position: fixed;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(242, 240, 234, 0.3);
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
   transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
 }
 
-/* ── Typography ── */
+/* ── Standard Card Surface ── */
+.card-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.card-surface:hover {
+  border-color: var(--border-hover);
+}
+
+/* Compatibility with glass-card */
+.glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: border-color 150ms ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* ── Standard Typography Classes ── */
 .font-display { font-family: var(--font-display); }
 .font-ui { font-family: var(--font-ui); }
-.font-mono { font-family: var(--font-mono); }
+.font-mono { font-family: var(--font-mono); font-feature-settings: "tnum"; }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--ground); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-/* ── Selection ── */
-::selection { background: rgba(198, 255, 61, 0.2); color: var(--text); }
-
-/* ── Focus ── */
-:focus-visible {
-  outline: 2px solid var(--voip);
-  outline-offset: 2px;
+.card-title, .label-sm {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
 }
+
+/* ── Custom Range Slider ── */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+  transition: background 150ms ease;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.6);
+  border: 2px solid #0A0B0E;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.6);
+  border: 2px solid #0A0B0E;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--ground); }
+::-webkit-scrollbar-thumb { background: #262934; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3B3F4F; }
 
 /* ── Accessibility ── */
 @media (prefers-reduced-motion: reduce) {
@@ -107,23 +176,4 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .film-grain::after { animation: none; }
-}
-
-/* ── Card glass ── */
-.glass-card {
-  background: rgba(20, 20, 21, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-/* ── Uppercase tracking ── */
-.label-sm {
-  font-family: var(--font-ui);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-dim);
 }

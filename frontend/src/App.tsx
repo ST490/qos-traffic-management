@@ -17,18 +17,18 @@ import type { PolicyMode, TrafficClass, RunInfo } from './types';
 import './index.css';
 
 const sectionVariant = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: 'easeOut' as const },
+    transition: { duration: 0.45, ease: 'easeOut' as const },
   },
 };
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <motion.section
-      className={className}
+      className={`min-w-0 w-full ${className}`}
       variants={sectionVariant}
       initial="hidden"
       whileInView="visible"
@@ -134,22 +134,22 @@ export default function App() {
     <Layout>
       {/* ── Top Navigation Bar ── */}
       <nav
-        className="flex items-center justify-between py-6 mb-4 sticky top-0 z-50 bg-[#0B0B0C]/85 backdrop-blur-md border-b border-white/[0.04]"
+        className="flex items-center justify-between py-4 sm:py-5 mb-6 sticky top-0 z-50 bg-[#0A0B0E]/90 backdrop-blur-md border-b border-white/[0.08]"
         role="navigation"
         aria-label="Main navigation"
       >
         {/* Brand logo */}
-        <span className="font-display text-2xl md:text-3xl tracking-tight text-[#F2F0EA] select-none">
+        <span className="font-display text-2xl sm:text-3xl tracking-tight text-[#F3F4F6] select-none">
           Priori
         </span>
 
-        {/* Center Pill Policy Switcher */}
+        {/* Center Segmented Control Policy Switcher */}
         <div className="hidden sm:block">
           <PolicySwitcher active={state.policy} onChange={handlePolicyChange} />
         </div>
 
         {/* Live Status indicator */}
-        <div className="flex items-center gap-2.5 text-xs font-mono">
+        <div className="flex items-center gap-2 text-xs font-mono">
           <span
             className={`w-2 h-2 rounded-full ${
               status === 'connected'
@@ -157,13 +157,13 @@ export default function App() {
                 : 'bg-red-500 shadow-[0_0_8px_#ef4444]'
             }`}
           />
-          <span className="text-[#8A8880] uppercase tracking-wider text-[0.6875rem]">
+          <span className="text-white/60 uppercase tracking-wider text-[11px] whitespace-nowrap">
             {status === 'connected' ? 'LIVE' : 'OFFLINE'}
-            <span className="mx-1 text-[#3A3A40]">·</span>
+            <span className="mx-1 text-white/20">·</span>
             {state.mode === 'simulation' ? 'SIM MODE' : 'EMULATION'}
             {isSample && (
               <>
-                <span className="mx-1 text-[#3A3A40]">·</span>
+                <span className="mx-1 text-white/20">·</span>
                 <span className="text-[#FF7A45]">SAMPLE DATA</span>
               </>
             )}
@@ -172,16 +172,16 @@ export default function App() {
       </nav>
 
       {/* Mobile policy switcher */}
-      <div className="sm:hidden mb-6 flex justify-center">
+      <div className="sm:hidden mb-6 flex justify-center w-full min-w-0">
         <PolicySwitcher active={state.policy} onChange={handlePolicyChange} />
       </div>
 
-      {/* Main Content Sections with Generous Spacing */}
-      <div className="space-y-10 md:space-y-12 pb-16">
+      {/* Main Content Sections with 24px-48px consistent vertical rhythm */}
+      <div className="space-y-8 sm:space-y-10 md:space-y-12 pb-16 w-full min-w-0">
         {/* ── Hero with ReactBits Crosshair ── */}
         <Hero />
 
-        {/* ── Four Class Metrics Cards ── */}
+        {/* ── Four Traffic Class Cards ── */}
         <Section>
           <ClassCards
             metrics={state.metrics}
@@ -195,7 +195,7 @@ export default function App() {
 
         {/* ── Primary Charts: Throughput & Jain's Fairness ── */}
         <Section>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch w-full min-w-0">
             <ThroughputChart history={history} policyChanges={policyChanges} />
             <FairnessPanel
               jainIndex={state.jain_fairness_index}
@@ -222,7 +222,7 @@ export default function App() {
 
         {/* ── Secondary Charts: Latency & Jitter/Loss ── */}
         <Section>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch w-full min-w-0">
             <LatencyChart history={history} />
             <JitterLossChart history={history} />
           </div>
@@ -246,7 +246,7 @@ export default function App() {
       </div>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-[#1a1a20] py-8 text-center text-xs font-mono text-[#8A8880]">
+      <footer className="border-t border-white/[0.08] py-8 text-center text-xs font-mono text-white/40">
         Priori — QoS Traffic Management System · OpenFlow 1.3 / Pure-Python Simulation Mode
       </footer>
     </Layout>

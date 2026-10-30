@@ -8,18 +8,18 @@ interface LayoutProps {
 function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
     if (prefersReduced) return;
     const onMove = (e: MouseEvent) => {
       if (dotRef.current) {
-        dotRef.current.style.left = `${e.clientX - 4}px`;
-        dotRef.current.style.top = `${e.clientY - 4}px`;
+        dotRef.current.style.left = `${e.clientX - 3}px`;
+        dotRef.current.style.top = `${e.clientY - 3}px`;
       }
       if (ringRef.current) {
-        ringRef.current.style.left = `${e.clientX - 16}px`;
-        ringRef.current.style.top = `${e.clientY - 16}px`;
+        ringRef.current.style.left = `${e.clientX - 14}px`;
+        ringRef.current.style.top = `${e.clientY - 14}px`;
       }
     };
     window.addEventListener('mousemove', onMove);
@@ -40,11 +40,10 @@ function Preloader() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 1200);
-    // Remove the HTML preloader
+    const timer = setTimeout(() => setVisible(false), 900);
     const el = document.getElementById('preloader');
     if (el) {
-      setTimeout(() => el.remove(), 1400);
+      setTimeout(() => el.remove(), 1100);
     }
     return () => clearTimeout(timer);
   }, []);
@@ -53,16 +52,16 @@ function Preloader() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--ground)]"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0A0B0E]"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
         >
           <motion.span
-            className="font-display text-4xl text-[var(--text)]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 0.6, y: 0 }}
-            transition={{ duration: 0.4 }}
+            className="font-display text-4xl text-[#F3F4F6]"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 0.8, y: 0 }}
+            transition={{ duration: 0.35 }}
           >
             Priori
           </motion.span>
@@ -74,10 +73,10 @@ function Preloader() {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="film-grain min-h-screen">
+    <div className="film-grain min-h-screen w-full overflow-x-hidden bg-[#0A0B0E] text-[#F3F4F6]">
       <Preloader />
       <CustomCursor />
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-[1440px] min-w-0 px-4 sm:px-6 md:px-8 py-4 sm:py-6">
         {children}
       </main>
     </div>
