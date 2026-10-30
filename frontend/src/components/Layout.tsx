@@ -1,25 +1,26 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 interface LayoutProps {
   children: ReactNode;
+  /** Content of the sticky top bar. Rendered inside the page container. */
+  header?: ReactNode;
 }
 
 function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const prefersReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
     if (prefersReduced) return;
     const onMove = (e: MouseEvent) => {
       if (dotRef.current) {
-        dotRef.current.style.left = `${e.clientX - 3}px`;
-        dotRef.current.style.top = `${e.clientY - 3}px`;
+        dotRef.current.style.left = `${e.clientX - 4}px`;
+        dotRef.current.style.top = `${e.clientY - 4}px`;
       }
       if (ringRef.current) {
-        ringRef.current.style.left = `${e.clientX - 14}px`;
-        ringRef.current.style.top = `${e.clientY - 14}px`;
+        ringRef.current.style.left = `${e.clientX - 16}px`;
+        ringRef.current.style.top = `${e.clientY - 16}px`;
       }
     };
     window.addEventListener('mousemove', onMove);
@@ -36,49 +37,47 @@ function CustomCursor() {
   );
 }
 
-function Preloader() {
-  const [visible, setVisible] = useState(true);
-
+/** Retires the static preloader painted by index.html before React boots. */
+function useRetireBootPreloader() {
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 900);
     const el = document.getElementById('preloader');
-    if (el) {
-      setTimeout(() => el.remove(), 1100);
-    }
-    return () => clearTimeout(timer);
+    if (!el) return;
+    const hide = setTimeout(() => {
+      el.style.opacity = '0';
+    }, 260);
+    const remove = setTimeout(() => el.remove(), 700);
+    return () => {
+      clearTimeout(hide);
+      clearTimeout(remove);
+    };
   }, []);
-
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0A0B0E]"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
-        >
-          <motion.span
-            className="font-display text-4xl text-[#F3F4F6]"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 0.8, y: 0 }}
-            transition={{ duration: 0.35 }}
-          >
-            Priori
-          </motion.span>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, header }: LayoutProps) {
+  useRetireBootPreloader();
+
   return (
-    <div className="film-grain min-h-screen w-full overflow-x-hidden bg-[#0A0B0E] text-[#F3F4F6]">
-      <Preloader />
+    <div className="film-grain flex min-h-screen flex-col">
       <CustomCursor />
-      <main className="relative z-10 mx-auto w-full max-w-[1440px] min-w-0 px-4 sm:px-6 md:px-8 py-4 sm:py-6">
-        {children}
-      </main>
+
+      {/* Full-bleed chrome: the rule and the blur span the viewport,
+          the content inside it lines up with the page container. */}
+      <header className="z-nav sticky top-0 border-b border-[var(--border-soft)] bg-[#0b0b0c]/88 backdrop-blur-xl">
+        <div className="shell flex h-14 items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr]">
+          {header}
+        </div>
+      </header>
+
+      <main className="shell flex-1 pt-6">{children}</main>
+
+      <footer className="mt-[var(--band-loose)] border-t border-[var(--border-soft)]">
+        <div className="shell flex flex-wrap items-center justify-between gap-x-6 gap-y-1.5 py-6 font-mono text-[0.6875rem] text-[var(--text-dim)]">
+          <span>Priori — QoS Traffic Management System</span>
+          <span className="text-[var(--text-faint)]">
+            OpenFlow 1.3 · Pure-Python Simulation Mode
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

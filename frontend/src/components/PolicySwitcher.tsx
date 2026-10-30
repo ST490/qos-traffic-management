@@ -11,16 +11,31 @@ const policies: { id: PolicyMode; label: string }[] = [
 interface PolicySwitcherProps {
   active: PolicyMode;
   onChange: (mode: PolicyMode) => void;
+  /** Unique per mounted instance — prevents two indicators sharing a layout animation. */
+  id: string;
+  /** `pill` sits in the header; `full` fills its container on small screens. */
+  variant?: 'pill' | 'full';
   disabled?: boolean;
   className?: string;
 }
 
-export default function PolicySwitcher({ active, onChange, disabled, className = '' }: PolicySwitcherProps) {
+export default function PolicySwitcher({
+  active,
+  onChange,
+  id,
+  variant = 'pill',
+  disabled,
+  className = '',
+}: PolicySwitcherProps) {
+  const full = variant === 'full';
+
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#14161F] p-1 shadow-inner backdrop-blur-md ${className}`}
+      className={`${
+        full ? 'grid w-full grid-cols-4' : 'inline-flex'
+      } items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] p-1 ${className}`}
       role="tablist"
-      aria-label="QoS Policy Switcher"
+      aria-label="QoS scheduling discipline"
     >
       {policies.map((p) => {
         const isActive = active === p.id;
@@ -29,28 +44,29 @@ export default function PolicySwitcher({ active, onChange, disabled, className =
         return (
           <button
             key={p.id}
+            type="button"
             role="tab"
             aria-selected={isActive}
             data-crosshair-target
-            className={`relative rounded-lg px-4 py-2 text-xs md:text-sm font-semibold font-ui transition-colors duration-150 cursor-pointer select-none whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C6FF3D] ${
+            className={`relative select-none rounded-full font-ui font-medium transition-colors duration-200 ${
+              full ? 'w-full px-2 py-2 text-xs' : 'px-3.5 py-1.5 text-xs'
+            } ${
               isActive
-                ? isAdaptive
-                  ? 'text-[#0A0B0E]'
-                  : 'text-[#0A0B0E]'
-                : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
-            } ${disabled ? 'pointer-events-none opacity-40' : ''}`}
+                ? 'font-semibold text-[#0b0b0c]'
+                : 'text-[var(--text-dim)] hover:bg-white/[0.04] hover:text-[var(--text)]'
+            } ${disabled ? 'pointer-events-none opacity-40' : 'cursor-pointer'}`}
             onClick={() => onChange(p.id)}
             disabled={disabled}
           >
             {isActive && (
               <motion.span
-                layoutId="segmented-control-active"
-                className={`absolute inset-0 rounded-lg ${
+                layoutId={`policy-pill-${id}`}
+                className={`absolute inset-0 rounded-full ${
                   isAdaptive
-                    ? 'bg-[#C6FF3D] shadow-[0_0_14px_rgba(198,255,61,0.35)]'
-                    : 'bg-[#F3F4F6] shadow-sm'
+                    ? 'bg-[var(--voip)] shadow-[0_0_14px_rgba(198,255,61,0.3)]'
+                    : 'bg-[var(--text)]'
                 }`}
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 34 }}
               />
             )}
             <span className="relative z-10">{p.label}</span>

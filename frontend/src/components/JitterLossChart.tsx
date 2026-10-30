@@ -6,11 +6,12 @@ import { CLASS_CONFIG } from '../types';
 interface JitterLossChartProps {
   history: MetricsHistory[];
   height?: number;
+  className?: string;
 }
 
 const classes: TrafficClass[] = ['voip', 'video', 'web', 'bulk'];
 
-export default function JitterLossChart({ history, height: propHeight = 220 }: JitterLossChartProps) {
+export default function JitterLossChart({ history, height: propHeight, className = '' }: JitterLossChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -19,17 +20,14 @@ export default function JitterLossChart({ history, height: propHeight = 220 }: J
     const svg = svgRef.current;
     if (!container || !svg) return;
 
-    const width = container.clientWidth || 400;
-    const height = propHeight;
-    const margin = { top: 16, right: 42, bottom: 26, left: 42 };
+    const width = container.clientWidth;
+    const height = propHeight ?? container.clientHeight;
+    const margin = { top: 16, right: 40, bottom: 28, left: 36 };
     const innerW = Math.max(10, width - margin.left - margin.right);
     const innerH = Math.max(10, height - margin.top - margin.bottom);
 
     const sel = d3.select(svg);
-    sel
-      .attr('viewBox', `0 0 ${width} ${height}`)
-      .attr('width', '100%')
-      .attr('height', height);
+    sel.attr('width', width).attr('height', height);
     sel.selectAll('*').remove();
 
     const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
@@ -38,8 +36,8 @@ export default function JitterLossChart({ history, height: propHeight = 220 }: J
       g.append('text')
         .attr('x', innerW / 2).attr('y', innerH / 2)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.4)').attr('font-size', 12)
-        .attr('font-family', 'Inter Tight, sans-serif')
+        .attr('fill', '#8A8880').attr('font-size', 12)
+        .attr('font-family', 'Inter Tight')
         .text('Awaiting stream telemetry…');
       return;
     }
@@ -53,28 +51,28 @@ export default function JitterLossChart({ history, height: propHeight = 220 }: J
     const maxLoss = d3.max(history, d => Math.max(...classes.map(c => d[c].loss_percent))) ?? 100;
     const yLoss = d3.scaleLinear().domain([0, Math.max(maxLoss * 1.15, 10)]).range([innerH, 0]).nice();
 
-    // Grid lines
+    // Grid
     g.append('g').call(d3.axisLeft(yJitter).ticks(4).tickSize(-innerW).tickFormat(() => ''))
-      .selectAll('line').attr('stroke', 'rgba(255,255,255,0.05)').attr('stroke-dasharray', '3,4');
+      .selectAll('line').attr('stroke', '#1a1a20').attr('stroke-dasharray', '3,4');
     g.selectAll('.domain').remove();
 
-    // X axis: 11px muted
+    // X axis
     g.append('g').attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(x).ticks(5).tickFormat(d => `${d}s`))
-      .selectAll('text').attr('fill', 'rgba(255,255,255,0.45)').attr('font-family', 'JetBrains Mono, monospace').attr('font-size', 11).attr('dy', '10px');
+      .selectAll('text').attr('fill', '#6E6D66').attr('font-family', 'JetBrains Mono').attr('font-size', 10);
 
     // Left Y: Jitter
     g.append('g').call(d3.axisLeft(yJitter).ticks(4).tickFormat(d => `${d}ms`))
-      .selectAll('text').attr('fill', 'rgba(255,255,255,0.45)').attr('font-family', 'JetBrains Mono, monospace').attr('font-size', 11).attr('dx', '-4px');
+      .selectAll('text').attr('fill', '#6E6D66').attr('font-family', 'JetBrains Mono').attr('font-size', 10);
 
     // Right Y: Loss
     g.append('g').attr('transform', `translate(${innerW},0)`)
       .call(d3.axisRight(yLoss).ticks(4).tickFormat(d => `${d}%`))
-      .selectAll('text').attr('fill', 'rgba(255,255,255,0.45)').attr('font-family', 'JetBrains Mono, monospace').attr('font-size', 11).attr('dx', '4px');
+      .selectAll('text').attr('fill', '#6E6D66').attr('font-family', 'JetBrains Mono').attr('font-size', 10);
 
-    g.selectAll('.tick line').attr('stroke', 'rgba(255,255,255,0.08)');
+    g.selectAll('.tick line').attr('stroke', '#1e1e24');
 
-    // Jitter lines: 2px
+    // Jitter lines
     for (const cls of classes) {
       const color = CLASS_CONFIG[cls].color;
       const line = d3.line<MetricsHistory>()
@@ -116,25 +114,19 @@ export default function JitterLossChart({ history, height: propHeight = 220 }: J
   }, [draw]);
 
   return (
-    <div
-      className="card-surface p-5 sm:p-6 flex flex-col justify-between h-full min-w-0 w-full"
-      data-crosshair-target
-    >
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="card-title text-xs font-semibold tracking-wider text-white/55">
-            JITTER (RFC 3550) & PACKET LOSS %
-          </h3>
-          <span className="text-[11px] font-mono text-white/40">Solid: Jitter · Area: Loss</span>
-        </div>
-        <div ref={containerRef} className="w-full min-w-0 overflow-hidden">
-          <svg ref={svgRef} className="w-full h-auto block" />
-        </div>
+    <div className={`panel h-full ${className}`} data-crosshair-target>
+      <div className="panel-head">
+        <h3 className="panel-label">Jitter (RFC 3550) &amp; packet loss %</h3>
+        <span className="panel-note">Line: jitter · Area: loss</span>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-white/[0.06] text-xs font-mono text-white/45">
-        VoIP jitter drops sharply under Strict Priority and Adaptive queuing.
+      <div ref={containerRef} className="plot">
+        <svg ref={svgRef} className="w-full" />
       </div>
+
+      <p className="panel-foot text-[var(--text-faint)]">
+        VoIP jitter drops sharply under Strict Priority and Adaptive queuing.
+      </p>
     </div>
   );
 }

@@ -265,7 +265,7 @@ const Crosshair = ({
         brackets(x, y, w, h, 1);
         if (s.showCoordinates && state.target) {
           const box = state.target.getBoundingClientRect();
-          tag(`${Math.round(box.width)} Ã ${Math.round(box.height)}`, x + w / 2, y + h + 8, 'center');
+          tag(`${Math.round(box.width)} × ${Math.round(box.height)}`, x + w / 2, y + h + 8, 'center');
         }
       }
       state.pulses.forEach(pulse => {
@@ -460,7 +460,7 @@ const Crosshair = ({
         aria-hidden="true"
         className={[
           containerRef ? 'absolute' : 'fixed',
-          'inset-0 h-full w-full pointer-events-none z-[10000]',
+          'inset-0 h-full w-full pointer-events-none z-hud',
           className
         ]
           .filter(Boolean)
@@ -472,4 +472,5 @@ const Crosshair = ({
 };
 
 export default Crosshair;
+
 

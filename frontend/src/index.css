@@ -1,179 +1,333 @@
 @import "tailwindcss";
 
-/* ── Refined Design Tokens ── */
+/* ─────────────────────────────────────────────────────────────
+   Tokens
+   Two axes: identity (surfaces, accents, type) and space.
+   Space is expressed on one 4pt-based scale so every gap in the
+   dashboard resolves to the same small set of values.
+   ───────────────────────────────────────────────────────────── */
 :root {
-  --ground: #0A0B0E;
-  --surface: #111318;
-  --surface-hover: #161820;
-  --surface-active: #1C1F2A;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.14);
-  --text: #F3F4F6;
-  --text-muted: #8E929E;
-  --text-dim: #5C606C;
-  --voip: #C6FF3D;
-  --video: #FF7A45;
-  --web: #6AA8FF;
-  --bulk: #B79CFF;
-  --amber: #F59E0B;
+  /* identity */
+  --ground: #0b0b0c;
+  --surface: #111114;
+  --surface-2: #16161c;
+  --surface-3: #1b1b22;
+  --border: #23232a;
+  --border-soft: #1b1b21;
+  --border-strong: #2a2a32;
+  --text: #f2f0ea;
+  --text-dim: #8a8880;
+  --text-faint: #6a6860;
+
+  --voip: #c6ff3d;
+  --video: #ff7a45;
+  --web: #6aa8ff;
+  --bulk: #b79cff;
+
   --font-display: 'Instrument Serif', serif;
-  --font-ui: 'Inter Tight', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-ui: 'Inter Tight', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* space — the whole page reads from these six values */
+  --gutter: clamp(1rem, 2.2vw, 2rem); /* 16 → 32  page edge */
+  --panel-pad: clamp(1.125rem, 1.4vw, 1.5rem); /* 18 → 24  panel inset */
+  --band: clamp(1.5rem, 2.2vw, 2rem); /* 24 → 32  between bands */
+  --band-loose: clamp(2rem, 3.2vw, 3rem); /* 32 → 48  after the masthead */
+  --gap-band: clamp(1rem, 1.3vw, 1.25rem); /* 16 → 20  inside a band */
+
+  /* one height for every plot in the dashboard */
+  --chart-h: clamp(9.5rem, 12.5vw, 12rem); /* 152 → 192 */
+
+  --radius-panel: 12px;
+  --radius-tile: 10px;
+
+  /* z — a named scale, not a race to 9999 */
+  --z-nav: 40;
+  --z-grain: 50;
+  --z-cursor: 60;
+  --z-hud: 70;
+  --z-preloader: 80;
 }
 
-/* ── Base Reset & Strict Box Sizing ── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ─────────────────────────────────────────────────────────────
+   Base
+   Tailwind's preflight already resets margins and padding inside
+   @layer base. A second, unlayered `*` reset would outrank every
+   utility and silently zero all spacing, so there isn't one.
+   ───────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background: var(--ground);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-faint);
+  }
+
+  ::selection {
+    background: rgba(198, 255, 61, 0.2);
+    color: var(--text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--voip);
+    outline-offset: 2px;
+  }
 }
 
-html {
-  background: var(--ground);
-  color: var(--text);
-  font-family: var(--font-ui);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
-  max-width: 100vw;
-  overflow-x: hidden;
+/* ─────────────────────────────────────────────────────────────
+   Structure
+   One panel surface, one band grid, one spacing scale. Components
+   sit below utilities so any instance can still override a value.
+   ───────────────────────────────────────────────────────────── */
+@layer components {
+  /* page frame — header, main and footer all share this edge */
+  .shell {
+    width: 100%;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* vertical rhythm between bands */
+  .page-stack {
+    display: grid;
+    gap: var(--band);
+    align-content: start;
+  }
+
+  /* 12-column band grid; children span 12 by default, overridden at lg */
+  .band-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--gap-band);
+    align-items: stretch;
+  }
+
+  .band-grid > * {
+    grid-column: span 12 / span 12;
+    min-width: 0;
+  }
+
+  /* the one container surface */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-panel);
+    padding: var(--panel-pad);
+    min-width: 0;
+  }
+
+  /* a panel whose cells draw their own hairline dividers */
+  .panel-flush {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* header row inside a panel — identical everywhere */
+  .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin-bottom: 1rem;
+    min-height: 1.25rem;
+  }
+
+  .panel-label {
+    font-family: var(--font-ui);
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .panel-note {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  /* footnote pinned to the bottom of a panel, above a divider */
+  .panel-foot {
+    margin-top: auto;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+  }
+
+  /* inset surface inside a panel — never another card shell */
+  .hairline-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--border-soft);
+  }
+
+  .hairline-grid > * {
+    background: var(--surface);
+    min-width: 0;
+  }
+
+  /* a plot occupies the same height everywhere in the dashboard */
+  .plot {
+    width: 100%;
+    height: var(--chart-h);
+  }
+
+  /* scrollable list that fills the height its row grants it */
+  .scroll-area {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.25rem;
+  }
 }
 
-body {
-  background: var(--ground);
-  min-height: 100vh;
-  max-width: 100vw;
-  overflow-x: hidden;
-  position: relative;
+@layer utilities {
+  .z-nav {
+    z-index: var(--z-nav);
+  }
+  .z-grain {
+    z-index: var(--z-grain);
+  }
+  .z-cursor {
+    z-index: var(--z-cursor);
+  }
+  .z-hud {
+    z-index: var(--z-hud);
+  }
+  .z-preloader {
+    z-index: var(--z-preloader);
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-ui {
+    font-family: var(--font-ui);
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
 }
 
-/* ── Film Grain Subtle Texture ── */
+/* ── Film grain ── */
 .film-grain::after {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: 9998;
+  z-index: var(--z-grain);
   pointer-events: none;
-  opacity: 0.025;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 128px 128px;
+  animation: grain 0.5s steps(4) infinite;
 }
 
-/* ── Custom Cursor ── */
+@keyframes grain {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-5%, -5%);
+  }
+  50% {
+    transform: translate(5%, 5%);
+  }
+  75% {
+    transform: translate(-2%, 3%);
+  }
+}
+
+/* ── Custom cursor ── */
 .cursor-dot {
   position: fixed;
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   background: var(--text);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 9999;
+  z-index: var(--z-cursor);
   mix-blend-mode: difference;
   transition: transform 0.15s ease;
 }
 
 .cursor-ring {
   position: fixed;
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(242, 240, 234, 0.3);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 9999;
-  transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
+  z-index: var(--z-cursor);
+  transition: transform 0.3s ease;
 }
 
-/* ── Standard Card Surface ── */
-.card-surface {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-}
+/* ── Typography helpers now live in @layer utilities (see above) ── */
 
-.card-surface:hover {
-  border-color: var(--border-hover);
-}
-
-/* Compatibility with glass-card */
-.glass-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: border-color 150ms ease;
-}
-
-.glass-card:hover {
-  border-color: var(--border-hover);
-}
-
-/* ── Standard Typography Classes ── */
-.font-display { font-family: var(--font-display); }
-.font-ui { font-family: var(--font-ui); }
-.font-mono { font-family: var(--font-mono); font-feature-settings: "tnum"; }
-
-.card-title, .label-sm {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* ── Custom Range Slider ── */
-.range-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.08);
-  outline: none;
-  transition: background 150ms ease;
-}
-
-.range-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.6);
-  border: 2px solid #0A0B0E;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.range-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-}
-
-.range-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.6);
-  border: 2px solid #0A0B0E;
-}
-
-/* ── Scrollbars ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--ground); }
-::-webkit-scrollbar-thumb { background: #262934; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3B3F4F; }
-
-/* ── Accessibility ── */
+/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .film-grain::after {
+    animation: none;
   }
 }
