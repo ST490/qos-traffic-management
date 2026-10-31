@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import Crosshair from './Crosshair';
 
 interface LayoutProps {
   children: ReactNode;
@@ -59,6 +60,22 @@ export default function Layout({ children, header }: LayoutProps) {
   return (
     <div className="film-grain flex min-h-screen flex-col">
       <CustomCursor />
+
+      {/* HUD overlay for the whole site: fixed to the viewport, so the crosshair
+          tracks the pointer over every band, not just the masthead. Every major
+          surface carries data-crosshair-target, so the box follows the component
+          you are over; buttons and links inside it take precedence. Coordinates
+          are off because their edge chips would sit on the sticky header. */}
+      <Crosshair
+        color="#ffffff"
+        targetEffect="lock"
+        targetSelector="a, button, [data-crosshair-target]"
+        thickness={1}
+        opacity={0.55}
+        fade={0.85}
+        smoothing={0.35}
+        showCoordinates={false}
+      />
 
       {/* Full-bleed chrome: the rule and the blur span the viewport,
           the content inside it lines up with the page container. */}

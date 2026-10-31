@@ -1,27 +1,12 @@
-import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import Crosshair from './Crosshair';
 
 export default function Hero() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   return (
     <div
-      ref={containerRef}
       className="relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-gradient-to-b from-[#131317]/70 via-[#101013]/80 to-[var(--ground)] p-[var(--panel-pad)] sm:p-6 md:p-7"
+      data-crosshair-target
       aria-label="Overview"
     >
-      {/* ReactBits Crosshair HUD effect */}
-      <Crosshair
-        containerRef={containerRef}
-        color="#ffffff"
-        targetEffect="lock"
-        thickness={1}
-        opacity={0.85}
-        smoothing={0.35}
-        showCoordinates
-      />
-
       {/* Top row: what this is, and where the API docs live */}
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/70 px-3 py-1 font-mono text-[0.625rem] uppercase tracking-[0.1em] whitespace-nowrap text-[var(--text-dim)] sm:text-[0.6875rem] sm:tracking-[0.12em]">
